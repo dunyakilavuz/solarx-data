@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SolarX AR orbit data</title>
+<style>body{font-family:system-ui,sans-serif;max-width:42rem;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#222}code{background:#f3f3f3;padding:0 .25em}</style>
+</head>
+<body>
+<h1>SolarX AR orbit data</h1>
+<p>This folder holds one plain data file, <a href="v1/orbits.json"><code>v1/orbits.json</code></a>, that the
+<a href="https://dunyakilavuz.com/">SolarX AR</a> app downloads periodically. It is a filtered copy of public orbital
+elements, refreshed automatically twice a day. It is not an API: there are no accounts, keys or queries, and the app
+computes all positions on the device.</p>
+<h2>Sources and credits</h2>
+<ul>
+<li><strong>Satellites</strong> (CelesTrak GP groups <code>stations</code> and <code>visual</code>):
+orbital elements from <a href="https://celestrak.org">CelesTrak</a> (Dr. T.S. Kelso). The GP data originate from the
+18th Space Defense Squadron, U.S. Space Force, via <a href="https://www.space-track.org">space-track.org</a>.</li>
+<li><strong>Comets and bright asteroids</strong> (<code>CometEls.txt</code>, <code>Soft00Bright.txt</code>):
+orbits from the International Astronomical Union's <a href="https://minorplanetcenter.net">Minor Planet Center</a>.
+This product has made use of data and/or services provided by the International Astronomical Union's Minor Planet Center.</li>
+</ul>
+<p>Records are republished unchanged (only filtered to what the app uses). For any other purpose, please get the data
+from the original sources and follow their usage policies.</p>
+</body>
+</html>

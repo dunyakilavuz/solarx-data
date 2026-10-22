@@ -1,0 +1,84 @@
+name: Update orbit data
+
+# Twice a day (at odd minutes, to avoid the top-of-hour rush on the sources).
+# CelesTrak updates GP data every 2 hours and asks for at most one download
+# per update; this job downloads each of its two groups twice a day.
+# MPC files are only re-downloaded when the published copy is >= 20 h old.
+on:
+  schedule:
+    - cron: "23 5,17 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Re-download the MPC files even if the published copy is recent"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths: ["scripts/**", "site/**", ".github/workflows/mirror.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write   # only for the keep-alive step at the end
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      status: ${{ steps.build.outputs.status }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Unit tests (offline)
+        run: python -m unittest discover tests -v
+      - name: Build site/v1/orbits.json
+        id: build
+        run: |
+          set +e
+          python scripts/build.py --out site/v1/orbits.json \
+            --previous https://dunyakilavuz.com/solarx-data/v1/orbits.json \
+            ${{ inputs.force && '--force' || '' }}
+          code=$?
+          echo "status=$code" >> "$GITHUB_OUTPUT"
+          # 0 = all fresh, 2 = some data carried over (deploy, then fail), else stop.
+          if [ "$code" != "0" ] && [ "$code" != "2" ]; then exit 1; fi
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
+      - name: Report carried-over data
+        if: needs.build.outputs.status == '2'
+        run: |
+          echo "::error::A source failed; its previous data was published again. See the build log."
+          exit 1
+
+  keepalive:
+    # GitHub turns off scheduled workflows after 60 days without repository
+    # activity. Data is deployed, not committed, so re-enable this workflow
+    # through the API instead of making commits.
+    needs: deploy
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/mirror.yml/enable"

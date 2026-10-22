@@ -1,0 +1,3 @@
+site/v1/
+__pycache__/
+*.tmp
