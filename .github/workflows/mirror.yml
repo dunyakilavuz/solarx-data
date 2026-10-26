@@ -15,7 +15,7 @@ on:
         default: false
   push:
     branches: [main]
-    paths: ["scripts/**", "site/**", ".github/workflows/mirror.yml"]
+    paths: ["scripts/**", "site/**", "config/**", ".github/workflows/mirror.yml"]
 
 permissions:
   contents: read
@@ -33,6 +33,7 @@ jobs:
     timeout-minutes: 15
     outputs:
       status: ${{ steps.build.outputs.status }}
+      config_status: ${{ steps.config.outputs.status }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -51,6 +52,15 @@ jobs:
           echo "status=$code" >> "$GITHUB_OUTPUT"
           # 0 = all fresh, 2 = some data carried over (deploy, then fail), else stop.
           if [ "$code" != "0" ] && [ "$code" != "2" ]; then exit 1; fi
+      - name: Check and add site/v1/app_config.json
+        id: config
+        run: |
+          set +e
+          python scripts/app_config.py --src config/app_config.json --out site/v1/app_config.json \
+            --previous https://dunyakilavuz.com/solarx-data/v1/app_config.json
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+          # Never stops the orbit data: an invalid file republishes the live copy (status 2).
+          exit 0
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -69,6 +79,11 @@ jobs:
         if: needs.build.outputs.status == '2'
         run: |
           echo "::error::A source failed; its previous data was published again. See the build log."
+          exit 1
+      - name: Report an invalid app_config.json
+        if: needs.build.outputs.config_status != '0'
+        run: |
+          echo "::error::config/app_config.json is invalid; the previously published copy (if any) stays live. See the build log."
           exit 1
 
   keepalive:

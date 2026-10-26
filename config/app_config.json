@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "ads": {
+    "real_ads": false,
+    "interstitial": true,
+    "rewarded": true,
+    "inline": true,
+    "interstitial_min_gap_s": 180,
+    "interstitial_max_per_session": 3,
+    "interstitial_launch_grace_s": 60
+  },
+  "min_app_build": null
+}
