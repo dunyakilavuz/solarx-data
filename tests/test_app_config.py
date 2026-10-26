@@ -1,4 +1,6 @@
+import contextlib
 import copy
+import io
 import json
 import os
 import sys
@@ -58,7 +60,9 @@ class AppConfigTest(unittest.TestCase):
             with open(prev, "w") as f:
                 f.write(previous_text)
             args += ["--previous", prev]
-        code = app_config.main(args)
+        # keep the script's ::error:: lines out of the CI log (they would show as annotations)
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = app_config.main(args)
         written = json.load(open(out)) if os.path.exists(out) else None
         return code, written
 
