@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "ads": {
-    "real_ads": true,
+    "real_ads": false,
     "interstitial": true,
     "rewarded": true,
     "inline": true,
